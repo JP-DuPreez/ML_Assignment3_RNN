@@ -1,0 +1,59 @@
+{
+  "seed": 42,
+  "device": "auto",
+  "debug": false,
+  "num_workers": 0,
+  "results_dir": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/results/multi_32/vix_daily",
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/vix_daily.csv",
+    "value_column": "close",
+    "date_column": "date",
+    "seq_len": 24,
+    "horizon": 1,
+    "train_ratio": 0.7,
+    "val_ratio": 0.15,
+    "scaler": "standard"
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 50,
+    "patience": 10,
+    "min_delta": 0.0001,
+    "optimizer": {
+      "name": "adamw",
+      "lr": 0.001,
+      "weight_decay": 0.0
+    },
+    "loss": "huber",
+    "early_stopping_metric": "mse",
+    "huber_beta": 1.0,
+    "debug_batches": 1
+  },
+  "cv": {
+    "enabled": true,
+    "k_folds": 5
+  },
+  "models": [
+    {
+      "name": "elman_32",
+      "type": "elman",
+      "hidden_size": 32,
+      "dropout": 0.1,
+      "activation": "tanh"
+    },
+    {
+      "name": "jordan_32",
+      "type": "jordan",
+      "hidden_size": 32,
+      "dropout": 0.1,
+      "activation": "tanh"
+    },
+    {
+      "name": "multi_32",
+      "type": "multi",
+      "hidden_size": 32,
+      "dropout": 0.1,
+      "activation": "tanh"
+    }
+  ]
+}

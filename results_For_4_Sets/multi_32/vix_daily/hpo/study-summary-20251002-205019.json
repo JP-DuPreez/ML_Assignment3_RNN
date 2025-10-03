@@ -1,0 +1,30 @@
+{
+  "study": "hpo_multi_32_vix_daily_20251002-202730",
+  "n_trials": 20,
+  "best_mean_RMSE": 2.506040406227112,
+  "best_RMSE_std": 1.0090783006832722,
+  "best_mean_RMSE_train": 2.0808563232421875,
+  "best_params": {
+    "lr": 0.01593335925502072,
+    "seq_len": 37,
+    "hidden_size": 96,
+    "dropout": 0.12638436994574095
+  },
+  "best_number": 14,
+  "model_type": "multi",
+  "avg_best_epoch": 9.6,
+  "validation_mse": {
+    "mean": 7.29847776889801,
+    "std": 5.112358500971139
+  },
+  "validation_mae": {
+    "mean": 1.6176535725593566,
+    "std": 0.6796460505522679
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/vix_daily.csv",
+    "value_column": "close",
+    "date_column": "date",
+    "horizon": 1
+  }
+}

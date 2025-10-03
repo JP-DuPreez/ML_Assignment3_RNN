@@ -1,0 +1,30 @@
+{
+  "study": "hpo_elman_32_AAPL_filtered_20251002-223649",
+  "n_trials": 20,
+  "best_mean_RMSE": 3.121009850502014,
+  "best_RMSE_std": 2.3947276124983294,
+  "best_mean_RMSE_train": 0.7328140795230865,
+  "best_params": {
+    "lr": 0.0012753501929354209,
+    "seq_len": 20,
+    "hidden_size": 104,
+    "dropout": 0.13529966373127006
+  },
+  "best_number": 15,
+  "model_type": "elman",
+  "avg_best_epoch": 38.8,
+  "validation_mse": {
+    "mean": 15.47542233467102,
+    "std": 22.382390749172433
+  },
+  "validation_mae": {
+    "mean": 2.5337646484375,
+    "std": 2.0076612303115877
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/AAPL_filtered.csv",
+    "value_column": "adj_close",
+    "date_column": "date",
+    "horizon": 1
+  }
+}

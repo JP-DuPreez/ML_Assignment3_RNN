@@ -1,0 +1,30 @@
+{
+  "study": "hpo_jordan_32_AAPL_filtered_20251002-230601",
+  "n_trials": 20,
+  "best_mean_RMSE": 3.6342787981033324,
+  "best_RMSE_std": 3.205450880823354,
+  "best_mean_RMSE_train": 0.9653127431869507,
+  "best_params": {
+    "lr": 0.024321718880272673,
+    "seq_len": 35,
+    "hidden_size": 104,
+    "dropout": 0.22847833356772088
+  },
+  "best_number": 14,
+  "model_type": "jordan",
+  "avg_best_epoch": 15.6,
+  "validation_mse": {
+    "mean": 23.48289704322815,
+    "std": 37.59234298745181
+  },
+  "validation_mae": {
+    "mean": 2.951789617538452,
+    "std": 2.7037971578763313
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/AAPL_filtered.csv",
+    "value_column": "adj_close",
+    "date_column": "date",
+    "horizon": 1
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "study": "hpo_jordan_32_vix_daily_20251002-200731",
+  "n_trials": 20,
+  "best_mean_RMSE": 2.006341242790222,
+  "best_RMSE_std": 0.6137689668903505,
+  "best_mean_RMSE_train": 1.495705819129944,
+  "best_params": {
+    "lr": 0.0579652685040236,
+    "seq_len": 47,
+    "hidden_size": 96,
+    "dropout": 0.0515948537235581
+  },
+  "best_number": 5,
+  "model_type": "jordan",
+  "avg_best_epoch": 7.4,
+  "validation_mse": {
+    "mean": 4.402117609977722,
+    "std": 2.3951371101379064
+  },
+  "validation_mae": {
+    "mean": 1.2911052584648133,
+    "std": 0.41521257489756647
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/vix_daily.csv",
+    "value_column": "close",
+    "date_column": "date",
+    "horizon": 1
+  }
+}

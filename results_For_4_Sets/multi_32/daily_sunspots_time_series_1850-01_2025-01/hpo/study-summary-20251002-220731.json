@@ -1,0 +1,30 @@
+{
+  "study": "hpo_multi_32_daily_sunspots_time_series_1850-01_2025-01_20251002-213609",
+  "n_trials": 20,
+  "best_mean_RMSE": 17.227629375457763,
+  "best_RMSE_std": 11.448180222658383,
+  "best_mean_RMSE_train": 16.862009620666505,
+  "best_params": {
+    "lr": 0.004952320295724931,
+    "seq_len": 47,
+    "hidden_size": 88,
+    "dropout": 0.3645311612875469
+  },
+  "best_number": 11,
+  "model_type": "multi",
+  "avg_best_epoch": 18.8,
+  "validation_mse": {
+    "mean": 427.85202293396,
+    "std": 554.6588067159635
+  },
+  "validation_mae": {
+    "mean": 13.06011905670166,
+    "std": 8.947919810128935
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/daily_sunspots_time_series_1850-01_2025-01.csv",
+    "value_column": "counts",
+    "date_column": "date",
+    "horizon": 1
+  }
+}

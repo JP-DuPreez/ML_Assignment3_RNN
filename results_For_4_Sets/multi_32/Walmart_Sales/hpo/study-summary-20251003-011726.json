@@ -1,0 +1,30 @@
+{
+  "study": "hpo_multi_32_Walmart_Sales_20251003-004318",
+  "n_trials": 20,
+  "best_mean_RMSE": 233493.5703125,
+  "best_RMSE_std": 192736.2134278508,
+  "best_mean_RMSE_train": 163057.646875,
+  "best_params": {
+    "lr": 0.00034193592746858834,
+    "seq_len": 26,
+    "hidden_size": 56,
+    "dropout": 0.010027785919452262
+  },
+  "best_number": 16,
+  "model_type": "multi",
+  "avg_best_epoch": 39.6,
+  "validation_mse": {
+    "mean": 91666487808.0,
+    "std": 141788959846.28458
+  },
+  "validation_mae": {
+    "mean": 161436.88359375,
+    "std": 165467.80768310986
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/Walmart_Sales.csv",
+    "value_column": "Weekly_Sales",
+    "date_column": "Date",
+    "horizon": 1
+  }
+}

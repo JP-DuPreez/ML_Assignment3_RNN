@@ -1,0 +1,30 @@
+{
+  "study": "hpo_multi_32_seattle-weather_20251002-221812",
+  "n_trials": 20,
+  "best_mean_RMSE": 3.123925065994263,
+  "best_RMSE_std": 0.9678403304791181,
+  "best_mean_RMSE_train": 2.485773515701294,
+  "best_params": {
+    "lr": 0.016754133553577952,
+    "seq_len": 36,
+    "hidden_size": 16,
+    "dropout": 0.32587013570870244
+  },
+  "best_number": 11,
+  "model_type": "multi",
+  "avg_best_epoch": 17.2,
+  "validation_mse": {
+    "mean": 10.695622634887695,
+    "std": 7.181627279457343
+  },
+  "validation_mae": {
+    "mean": 2.4799642086029055,
+    "std": 0.75771692272979
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/seattle-weather.csv",
+    "value_column": "temp_max",
+    "date_column": "date",
+    "horizon": 1
+  }
+}

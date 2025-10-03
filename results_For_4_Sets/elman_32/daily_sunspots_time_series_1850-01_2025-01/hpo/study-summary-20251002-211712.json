@@ -1,0 +1,30 @@
+{
+  "study": "hpo_elman_32_daily_sunspots_time_series_1850-01_2025-01_20251002-205025",
+  "n_trials": 20,
+  "best_mean_RMSE": 17.908600044250488,
+  "best_RMSE_std": 11.176403126678668,
+  "best_mean_RMSE_train": 19.246839332580567,
+  "best_params": {
+    "lr": 0.08464427993374668,
+    "seq_len": 21,
+    "hidden_size": 8,
+    "dropout": 0.06043938921779859
+  },
+  "best_number": 18,
+  "model_type": "elman",
+  "avg_best_epoch": 7.6,
+  "validation_mse": {
+    "mean": 445.6299507141113,
+    "std": 559.1467315962706
+  },
+  "validation_mae": {
+    "mean": 14.176396560668945,
+    "std": 8.834673006543085
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/daily_sunspots_time_series_1850-01_2025-01.csv",
+    "value_column": "counts",
+    "date_column": "date",
+    "horizon": 1
+  }
+}

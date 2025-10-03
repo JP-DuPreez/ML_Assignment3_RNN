@@ -1,0 +1,259 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{tabularx}
+\usepackage{placeins}
+\usepackage{caption}
+\DeclareCaptionFormat{ieee-nocaps}{#1#2#3}
+\captionsetup[table]{format=ieee-nocaps,textfont=normalfont,labelfont=normalfont}
+% Use a period after the label for figures and tables (e.g., "Figure X.", "Table Y.")
+\captionsetup[figure]{labelsep=period,labelfont=bf}
+\captionsetup[table]{labelsep=period}
+\usepackage{needspace}
+\usepackage[draft]{hyperref}
+\renewcommand{\figurename}{Figure}
+\renewcommand{\tablename}{Table}
+% Force normal-case table captions (disable IEEEtran small caps)
+\captionsetup[table]{font=normalfont,labelfont=bf,labelsep=period,name=Table}
+
+
+% Using algorithm + algpseudocode for pseudocode formatting
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\makeatletter
+\renewcommand{\fnum@table}{\tablename~\thetable}  % shows “Table I” (not “TABLE I”)
+\renewcommand{\fnum@figure}{\figurename~\thefigure} % keeps figures consistent
+\makeatother
+\begin{document}
+
+\title{Time Series Forecasting using Recurrent Neural Networks}
+
+\author{\IEEEauthorblockN{Jean-Pierre du Preez}
+\IEEEauthorblockA{\textit{Department of Computer Science} \\
+\textit{University of Stellenbosch} \\
+Stellenbosch, South Africa \\
+26356163@sun.ac.za}}
+
+
+\maketitle
+
+\begin{abstract}
+This report compares 3 different recurrent neural network architectures for time series forecasting using 5 different datasets. The neural network architectures are the Elman RNN, the Jordan RNN, and the Multi-recurrent RNN. The datasets include the Walmart Sales dataset, the Apple Stock dataset, the VIX dataset, the Seattle Weather dataset, and the Sunspots dataset. The neural network architectures are compared using the RMSE and MAE metrics. The study evaluated how each of the neural network architectures perform on each of the datasets with the use of walk-forward cross-validation and hyperparameter tuning using Optuna for each dataset. Results show that the Jordan RNN achieved the best overall performance on four of the five datasets, particularly those with strong autoregressive or seasonal patterns, while the Elman RNN proved more reliable on noisy financial series. The Multi-recurrent model provided no consistent advantage, often exhibiting higher variance and weaker generalisation.
+\smallbreak
+\end{abstract}
+\begin{IEEEkeywords}
+Time Series Forecasting, Recurrent Neural Networks, Cross-validation, Hyperparameter Tuning, Optuna
+\end{IEEEkeywords}
+\noindent
+
+
+\section{\textbf{Introduction}}
+Time series forecasting is a crucial task in many domains, such as finance, weather prediction, and demand forecasting. Recurrent Neural Networks (RNNs) are a class of neural networks that are well-suited for time series forecasting due to their ability to capture temporal dependencies. This study evaluates three simple RNN variants—Elman, Jordan, and a multi-recurrent model—for short-horizon univariate forecasting under a single, configuration-driven pipeline.
+
+Models are trained with mini-batch backpropagation through time (BPTT) across the full \texttt{seq\_len}, and the objective is computed on the final step’s prediction. In architectures with output feedback (Jordan and the output-feedback path of the multi-recurrent model), the previous step’s prediction is reused as an input at the next step while gradients are not propagated through that reuse; the hidden-state chain remains fully differentiable end-to-end. Stability is promoted via global gradient-norm clipping (e.g., \texttt{max\_norm}=1.0) and \text{dropout on the hidden state} after activation . Generalisation is encouraged by early stopping on validation loss with fixed patience and \texttt{min\_delta}. Optimisation proceeds with mini-batch SGD using the configured optimiser—AdamW by default—where learning rate and weight decay are set in the configuration. The loss is Huber (default) and metrics are reported both on the scaled domain and after inverse transformation to original units.
+
+Model selection follows a blocked expanding walk-forward scheme in which training uses data up to $t_i$ and validation the next block, with preprocessing fit on the training slice only. Early stopping is applied per fold, and performance metrics are averaged across folds to provide a robust estimate. Hyperparameters are tuned with Optuna over a compact search space (learning rate, sequence length, hidden size, dropout), each trial trained with the same recipe of BPTT, clipping, dropout, and early stopping. The best configuration is then refit on the combined train and validation data and evaluated once on a final hold-out test set, which remains untouched during model selection.  
+
+The rest of the report outlines the background, methodology, empirical procedure and results of the study.
+
+\section{\textbf{Background}}
+This section provides a brief overview of the three RNN variants and the datasets used in the study.
+\smallbreak
+Neural networks originated as simple function approximators composed of interconnected artificial neurons. Each neuron computes a weighted sum of its inputs, applies a non-linear activation function, and passes the result forward. When stacked in layers, these units form a \textit{feed-forward neural network (FNN)}, where information flows strictly from inputs to outputs. FNNs are effective for tasks such as classification and regression, but they assume each input is independent and are therefore limited in modelling \textit{temporal dependencies} that arise in sequential data.
+
+\subsection{\textbf{Learning in Neural Networks}}
+Training neural networks is framed as minimising a \textit{loss function} (such as mean-squared error or mean-absolute error) that measures the difference between predictions and targets. The standard optimisation method is \textit{gradient descent}, where parameters are updated iteratively in the opposite direction of the gradient of the loss. Gradients are computed efficiently using \textit{backpropagation}, which applies the chain rule layer by layer to propagate error signals backward through the network \cite{rumelhart1986backprop, bishop2006pattern}. The learning rate controls the size of these updates: high values risk instability, while low values may stall convergence.
+
+\subsection{\textbf{Backpropagation Through Time}}
+For sequence data, backpropagation extends across time. In this setting the recurrent network is ``unrolled'' across the input window, and gradients flow not only through layers but also through successive time steps. This procedure, known as \textit{backpropagation through time (BPTT)}, allows temporal dependencies to be learned but also introduces stability challenges.
+
+\subsection{\textbf{Recurrent Neural Networks}}
+Recurrent neural networks (RNNs) extend feed-forward designs by introducing a hidden state that evolves with time. At each step, the hidden state captures information from previous observations and feeds it forward, enabling the network to model sequential patterns. Early variants illustrate different feedback mechanisms:  
+\begin{itemize}
+\item \textbf{Elman RNN}: feedback from the previous hidden state \cite{elman1990finding}.  
+\item \textbf{Jordan RNN}: feedback from the previous output \cite{jordan1986serial}.  
+\item \textbf{Multi-recurrent RNN}: feedback from both the hidden state and the output.  
+\end{itemize}
+
+These simple designs represent the foundations of recurrent modelling.
+
+\subsection{\textbf{Challenges and Successors}}
+Because gradients are repeatedly multiplied through time, simple RNNs are prone to the well-known \textit{exploding} and \textit{vanishing} gradient problems, which hinder learning of long-term dependencies \cite{pascanu2013difficulty}. Practical mitigations include gradient-norm clipping, careful weight initialisation, and restricting sequence length. Nevertheless, these are partial solutions. Later architectures introduced gating mechanisms to overcome these limitations:  
+
+\begin{itemize}
+\item \textbf{Long Short-Term Memory (LSTM)} networks use memory cells and gates to regulate information flow \cite{hochreiter1997lstm}.  
+\item \textbf{Gated Recurrent Units (GRU)} simplify gating with fewer parameters.  
+\item \textbf{Transformers} eliminate recurrence, using self-attention to capture long-range dependencies \cite{vaswani2017attention}.  
+\end{itemize}
+
+\subsection{\textbf{Data Preprocessing and Regularisation}}
+Time-series forecasting requires careful preparation of data. Series must be chronologically ordered, with duplicates removed and missing values addressed through conservative imputation or interpolation. Outliers should be distinguished from genuine events, while scaling (standardisation or min--max) must be fitted on training data only and applied forward to validation and test sets to prevent leakage. Supervised windows of fixed length are then constructed, ensuring no overlap across train, validation, and test boundaries.
+
+To promote generalisation, regularisation techniques are employed. Weight decay penalises large parameter values, dropout randomly deactivates hidden units during training \cite{goodfellow2016deep}, and early stopping monitors validation error to halt training when performance no longer improves. In recurrent models, gradient clipping is commonly used alongside these strategies to stabilise learning.
+
+\subsection{\textbf{Time-Series Datasets}}
+Five short-horizon forecasting datasets spanning finance, retail, science, and weather are considered:
+\noindent\textbf{AAPL}. Apple equity prices (daily trading data). The level series drifts over time and is treated as non-stationary; modelling uses simple reversible transforms such as first differences or log-returns.
+\noindent\textbf{VIX}. CBOE Volatility Index (daily trading data). Like AAPL, the index exhibits level drift and is handled as non-stationary, with log-returns or differences applied for stability.
+\noindent\textbf{SUN}. Daily sunspot counts. The series displays a pronounced multi-year cycle and changing variance, making the raw series effectively non-stationary; seasonal features or light variance-stabilising transforms are introduced. 
+\noindent\textbf{WMT}. Weekly Walmart store sales. The series shows strong seasonality and holiday effects with gradual level shifts, rendering it non-stationary unless seasonally adjusted.  
+\noindent\textbf{SEA}. Seattle daily weather (temperature and precipitation). Clear annual cycles and intermittent rainfall make the raw level series non-stationary; seasonal encodings and mild transforms improve learnability.  
+Across all datasets, temporal order is preserved in every split to prevent leakage. Stationarity is reported with respect to the level series, and only light, reversible preprocessing is applied to retain interpretability in original units.
+
+\section{\textbf{Methodology \& Empirical Procedure}}
+
+This section specifies a leakage-safe, reproducible evaluation pipeline for univariate time-series forecasting with simple recurrent neural networks. The design combines expanding-origin, blocked cross-validation (CV) with Optuna-based hyperparameter optimisation (HPO) so that model selection reflects true forecasting conditions (past $\rightarrow$ future), remains comparable across datasets, and yields interpretable error estimates.
+
+\subsection{\textbf{Data Pre-processing}}    
+All datasets are parsed chronologically, normalised to a consistent timezone, and validated for duplicate or missing timestamps; obvious schema errors are corrected conservatively and target values are coerced to numeric types. Calendar signals are represented with \emph{cyclical encodings} to preserve wrap-around continuity, e.g., day-of-week or month-of-year mapped to $(\sin(2\pi k/P),\,\cos(2\pi k/P))$ with period $P$; optional holiday/event flags may be included where relevant. Scaling follows a no-leakage policy: a scaler (standardisation or min–max) is fitted on the training slice only (and per fold during cross-validation) and applied forward to validation and test; all transform parameters are recorded to enable inverse transformation for reporting metrics in original units. Windowed supervision is then formed: each input window of length $L=\texttt{seq\_len}$ maps to a forecast target of length $h=\texttt{horizon}$, and windows are cut such that train, validation, and test boundaries are not crossed.
+
+\subsection{\textbf{Cross-Validation and Early Stopping}}
+
+\noindent An expanding‑origin blocked walk-forward CV selection scheme that preserves temporal order is applied. For fold $i$, the training span expands from the start of the series up to time $t_i$, and validation is the contiguous block that immediately follows, $[\,t_i,\, t_i{+}\Delta\,)$. Fold sizes are derived from the \textit{trainval} length and \texttt{k\_folds} so that both segments contain at least $\texttt{seq\_len}{+}\texttt{horizon}$ observations, ensuring viable input--target windows. No shuffling or interleaving is applied.\\
+
+\noindent\textbf{Early stopping} is driven by an explicit validation criterion, \texttt{early\_stopping\_metric} $\in \{\texttt{mse}, \texttt{mae}, \texttt{rmse}\}$, monitored independently of the chosen training loss. Training halts when no improvement of at least \texttt{min\_delta} is observed within \texttt{patience} epochs; the best weights are then restored and the corresponding \texttt{best\_epoch} recorded for the fold. Decoupling the optimisation loss from the selection metric allows robust objectives (e.g., Huber) to be used while retaining a consistent validation target (e.g., RMSE) for model selection.
+
+\subsection{\textbf{Backpropagation, Loss, and Stability}}
+
+\noindent Optimisation proceeds with mini-batch backpropagation-through-time (BPTT) across the full \texttt{seq\_len}. Parameter updates are performed using the AdamW optimiser, which combines adaptive learning-rate adjustment with decoupled weight decay for improved stability. To further control training dynamics, a global gradient-norm constraint (\texttt{max\_norm} $=$ 1.0) is enforced at each update. 
+
+The hidden activations use the $\tanh$ non-linearity, which provides smooth, bounded outputs in $[-1,1]$ and promotes more stable gradient flow compared to unbounded functions such as ReLU. This choice is standard in simple recurrent networks, as it helps to mitigate exploding states while still allowing the network to capture non-linear temporal dependencies \cite{goodfellow2016deep, pascanu2013difficulty}.
+
+The training loss is configurable—defaulted to Huber—and dropout is applied to hidden activations as a regulariser to mitigate overfitting.
+
+The Huber loss is employed as default, offering a compromise between the sensitivity of mean squared error (MSE) and the robustness of mean absolute error (MAE). \cite{huber1964robust}
+
+\subsection{\textbf{Hyperparameter Optimisation (Optuna)}}                      
+
+\noindent Hyperparameters are tuned with the \texttt{Optuna} framework. A budget of 20 trials is used for each model–dataset pairing. The objective is to minimise the mean validation RMSE (original units) across folds, measured at each fold’s \texttt{best\_epoch}. A default batch size of 64 is used. The search targets a small set of high impact parameters, summarised in Table~\ref{tab:hpo_params}.
+
+\begin{table}[h]
+    \renewcommand{\arraystretch}{1.15} % increase row height
+    \centering
+    \caption{Hyperparameters optimised in the search.}
+    \label{tab:hpo_params}
+    \begin{tabular}{p{1.9cm}p{3.5cm}p{2.0cm}}
+    \toprule
+    \textbf{Parameter} & \textbf{Role} & \textbf{Search Range} \\
+    \midrule
+    Learning rate   & Step size for AdamW updates & $[10^{-4},\,10^{-1}]$ \\
+    Sequence length & Input sequence window length & $[6,\,\min(48,\,N/4)]$ \\
+    Hidden size     & Number of recurrent units    & $\{8,16,\dots,128\}$ \\
+    Dropout rate    & Regularisation of hidden state & $[0.0,\,0.5]$ \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+Each trial runs the full cross-validation loop (train $\rightarrow$ early stop $\rightarrow$ validate) and aggregates metrics. Reported artefacts include validation RMSE (mean $\pm$ std, primary), MAE (mean $\pm$ std, secondary), mean training RMSE (sanity check), and the average best epoch for refit planning. The study summary stores these aggregates together with the best hyperparameters, dataset metadata, and loss histories to ensure reproducibility. 
+
+\subsection{\textbf{Performance Metrics}}
+\vspace{-0.7mm}
+\noindent Model evaluation uses both fold-level metrics during cross-validation and a final test assessment after refitting with the best hyperparameters. Table~\ref{tab:metrics} summarises the performance measures considered.
+
+\begin{table}[h]
+    \renewcommand{\arraystretch}{1.3} % row spacing
+    \centering
+    \caption{Performance metrics used for evaluation.}
+    \label{tab:metrics}
+    \begin{tabular}{p{1.5cm}p{5.8cm}}
+    \hline
+    \textbf{Metric} & \textbf{Description} \\
+    \hline
+    RMSE & Root mean squared error; primary metric, directly interpretable in target scale. \\
+    MAE  & Mean absolute error; less sensitive to outliers, complements RMSE. \\
+    MSE  & Mean squared error; included for completeness. \\
+    \hline
+    \end{tabular}
+    \end{table}
+    
+    
+    
+
+\noindent \textbf{Cross-validation aggregation.}
+For each fold, metrics are computed at the \texttt{best\_epoch}. The primary CV summary is the mean of fold-level RMSEs with its standard deviation, reported as $\texttt{best\_mean\_RMSE} \pm \texttt{best\_RMSE\_std}$. MAE is aggregated similarly. Fold-wise RMSE averaging is preferred over $\sqrt{\operatorname{mean}(\text{MSE})}$ since it directly reflects typical forecast error in original units.\\
+
+\noindent \textbf{Final refit and test evaluation.}
+Once hyperparameter optimisation is complete, the selected configuration is retrained on the full \textit{trainval} dataset and evaluated once on the untouched test block. To ensure training dynamics are comparable with cross-validation, the refit uses a \emph{steps-matched} update budget: the number of optimiser updates is aligned with the average training length and stopping epoch observed during CV. This prevents under- or over-training when scaling up from fold-level training sets to the larger combined dataset.
+
+During refit, the training loss curve is recorded and final test RMSE and MAE are reported in original units. For interpretability, a time-series overlay of true versus predicted values on the test segment is also generated.\\
+
+\noindent \textbf{Outputs and reproducibility.}
+Each Optuna trial produces a JSON file with parameters, per-fold metrics, best epoch per fold, and training histories. A study summary records aggregated results and best hyperparameters. After refit, a separate summary file stores final test metrics, the refit strategy, and diagnostic outputs. This structure ensures reproducibility and comparability across models and datasets.
+
+
+\begin{table*}[t]
+    \centering
+    \caption{Cross-validation Train/Val RMSE and MAE (mean $\pm$ std) across datasets and models.}
+    \label{tab:cv_trainval}
+    \input{../results/tables/table1_cv_trainval.tex}
+\end{table*}
+
+\section{\textbf{Results}}
+This section reports the results of the empirical procedure, including results of the cross-validation of the best performing parameters nd the final refit and test evaluation.
+
+
+\subsection{Cross-Validation Results}
+Table \ref{tab:cv_trainval} reports the cross-validation performance of the three recurrent architectures across the five datasets. Results reveal that the Jordan network was the most consistent performer, achieving the lowest mean validation errors on four out of five datasets (SEA, SUN, VIX, WMT). Its advantage is particularly clear on the SUN and WMT series, where validation RMSE and MAE were markedly lower than both Elman and multi-recurrent networks, suggesting that direct output-feedback is beneficial when modelling autoregressive or seasonal structures. The Elman network performed best on AAPL, where its reliance on hidden-state context proved more stable for noisy financial series. In contrast, the multi-recurrent network did not outperform the simpler models on any dataset and generally showed higher variance, pointing to overfitting on relatively small datasets.
+
+The relationship between training and validation errors further illustrates these dynamics. On AAPL and WMT, for example, the Elman and multi-recurrent models achieved much lower training errors than validation errors, indicating overfitting. Jordan’s errors were generally closer between training and validation, suggesting better generalisation across folds. For SUN and SEA, all models showed relatively large validation variances, reflecting the difficulty of modelling highly seasonal or cyclic behaviour, but Jordan nonetheless maintained the smallest gap between training and validation metrics. These comparisons highlight that while Elman can achieve very low training errors, Jordan’s output-feedback architecture yielded more balanced train–validation behaviour and consequently better out-of-sample performance.
+
+\subsection{Final Test Evaluation}
+Table~\ref{tab:final_holdout_test_metrics} reports the final holdout test performance across the five datasets, which can be summarised as follows:  
+\smallskip
+
+\noindent\textbf{AAPL}. Elman achieved the best results with RMSE = 3.64 and MAE = 2.79, outperforming Jordan and multi, though all models had MASE $>$ 1, indicating that the naïve benchmark remained competitive on equity prices.\\
+\noindent\textbf{SEA}. Jordan gave the lowest holdout errors (RMSE = 2.80, MAE = 2.17), slightly better than Elman, while multi-recurrent trailed with higher error and MASE $>$ 1.  \\
+\noindent\textbf{SUN}. Jordan again obtained the lowest MASE (0.674), but at the cost of larger RMSE and MAE than Elman, highlighting instability in error scaling due to the cyclic and near-zero values of sunspot counts.  \\
+\noindent\textbf{VIX}. Elman outperformed with RMSE = 1.59 and MASE $\approx$ 0.99, while Jordan and multi produced larger errors, reinforcing Elman’s robustness on highly noisy financial volatility data.  \\
+\noindent\textbf{WMT}. Jordan achieved the lowest holdout RMSE (138,614) and MAE (86,181), though multi was close in scaled terms (MASE = 0.680 vs 0.938), suggesting that both models capture seasonal sales patterns but Jordan has an advantage in absolute error.  
+
+Across datasets, Elman excelled on AAPL and VIX, Jordan dominated on SEA, SUN, and WMT, and the multi-recurrent model failed to provide a consistent advantage. These results mirror the cross-validation findings: Jordan’s output-feedback architecture generalises best in seasonal and autoregressive domains, while Elman is more reliable in noisy financial contexts.
+
+\begin{table}[h]
+    \centering
+    \caption{Final holdout Test metrics}
+    \label{tab:final_holdout_test_metrics}
+    \resizebox{1.02\columnwidth}{!}{%
+        \input{../results/tables/table2_test_metrics.tex}
+    }
+\end{table}
+
+\subsection{Best Hyperparameters}
+Table~\ref{tab:best_hparams} lists the best hyperparameters found for each model–dataset pair. Broadly, Jordan networks tended to favour larger hidden sizes, longer input sequences, and higher learning rates (e.g., SEA, VIX, WMT), reflecting their reliance on output-feedback. Elman generally converged to more conservative configurations with smaller learning rates and moderate dropout, consistent with its greater stability on noisy data. The multi-recurrent models showed no consistent pattern, often preferring smaller hidden sizes and higher dropout (e.g., SEA, SUN), which may explain their weaker generalisation. Overall, these search outcomes highlight systematic differences in model capacity and regularisation requirements, with Jordan exploiting more aggressive settings while Elman and multi settled on leaner architectures.
+
+
+\begin{table}[h]
+    \centering
+    \caption{Best hyperparameters selected per dataset and model}
+    \label{tab:best_hparams}
+    \resizebox{1.02\columnwidth}{!}{%
+        \input{../results/tables/table0_best_hparams.tex}
+    }
+\end{table}
+
+\section{Conclusion}
+
+This study evaluated the performance of three simple recurrent neural networks---Elman, Jordan, and a multi-recurrent variant---across five diverse time-series datasets covering finance, retail, science, and weather. Using a blocked walk-forward cross-validation procedure with hyperparameter optimisation, the study assessed both training/validation dynamics and final holdout test performance.
+
+The empirical results demonstrate that the Jordan network was the most consistent overall, achieving the lowest validation errors on four out of five datasets and maintaining competitive performance on the final holdout evaluations. Jordan’s output-feedback mechanism appears particularly advantageous for series with strong autoregressive or seasonal structure, such as weather, sunspots, and retail sales. Elman was most reliable on highly noisy financial data (AAPL, VIX), where hidden-state recurrence provided greater stability and robustness. By contrast, the multi-recurrent architecture did not yield systematic improvements and often showed signs of overfitting, despite its higher theoretical capacity.
+
+Across all datasets, training–validation comparisons highlighted that Jordan typically generalised more effectively, with smaller gaps between in-sample and out-of-sample errors. Elman achieved very low training errors but was more prone to overfitting, while multi-recurrent models required heavy regularisation and failed to translate their additional complexity into improved predictive accuracy. Hyperparameter search further underscored these differences, with Jordan favouring larger hidden layers, longer input horizons, and higher learning rates, while Elman and multi settled on more conservative settings.
+
+In summary, the findings suggest that among simple recurrent architectures, the Jordan network provides the best balance of accuracy and generalisation for short-horizon forecasting tasks with strong autoregressive structure, while Elman remains a stronger choice for noisy, weakly autocorrelated series. The multi-recurrent design offered no consistent benefit in this setting. These insights highlight the importance of aligning recurrent architecture choice with the underlying characteristics of the data and confirm that even comparatively simple RNNs can achieve competitive performance when paired with careful cross-validation, early stopping, and robust hyperparameter optimisation.
+
+
+\bibliographystyle{IEEEtranS}
+\bibliography{ref}
+
+\onecolumn
+\end{document}  

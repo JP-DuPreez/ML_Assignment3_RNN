@@ -1,0 +1,30 @@
+{
+  "study": "hpo_jordan_32_seattle-weather_20251002-221350",
+  "n_trials": 20,
+  "best_mean_RMSE": 2.854624319076538,
+  "best_RMSE_std": 0.49011980533238164,
+  "best_mean_RMSE_train": 2.4373772621154783,
+  "best_params": {
+    "lr": 0.004694998456676838,
+    "seq_len": 36,
+    "hidden_size": 104,
+    "dropout": 0.2999724255133412
+  },
+  "best_number": 18,
+  "model_type": "jordan",
+  "avg_best_epoch": 10.6,
+  "validation_mse": {
+    "mean": 8.38909740447998,
+    "std": 2.907294049151528
+  },
+  "validation_mae": {
+    "mean": 2.2795892477035524,
+    "std": 0.40333136771486233
+  },
+  "dataset": {
+    "path": "/Users/jpdupreez/Downloads/CompSci/4.MachineLearning/Assignment_3/data/seattle-weather.csv",
+    "value_column": "temp_max",
+    "date_column": "date",
+    "horizon": 1
+  }
+}
